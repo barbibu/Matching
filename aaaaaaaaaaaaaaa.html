@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Matching Exercise</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1, .instructions { text-align: center; }
+    .container { display: flex; flex-wrap: wrap; justify-content: space-around; gap: 10px; margin: auto; max-width: 1000px; padding: 10px; }
+    .term, .definition { margin: 5px; padding: 10px; border: 2px solid #ddd; border-radius: 5px; cursor: pointer; background-color: #ffffff; text-align: center; width: calc(40% - 20px); }
+    .definition { border: 2px dashed #bbb; }
+    .correct { background-color: #d4edda; border-color: #c3e6cb; }
+    .incorrect { background-color: #f8d7da; border-color: #f5c6cb; }
+    #feedback { margin-top: 20px; font-size: 1.2em; text-align: center; }
+    .navigation { text-align: center; margin-top: 20px; }
+    .navigation button { margin: 0 10px; padding: 10px 20px; font-size: 1.2em; cursor: pointer; background-color: #007BFF; color: white; border: none; border-radius: 5px; }
+    .navigation button:disabled { background-color: #ccc; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <h1>Match the Terms with Their Definitions</h1>
+  <div class="instructions">Page <span id="page-number"></span> of 3: Drag the terms to match them with the correct definitions.</div>
+  <div class="container" id="terms-container"></div>
+  <div class="container" id="definitions-container"></div>
+  <div id="feedback"></div>
+  <div class="navigation">
+    <button id="prev-page" disabled>← Previous Page</button>
+    <button id="next-page">Next Page →</button>
+  </div>
+
+  <script>
+    const termsAndDefinitions = [
+      [
+        { term: "Weird", definition: "Strange or unusual" },
+        { term: "Outfit", definition: "A set of clothes worn together" },
+        { term: "Ugly Christmas sweater", definition: "A knitted sweater with Christmas-themed designs, often considered unattractive" },
+        { term: "Tacky", definition: "In bad taste or style" },
+        { term: "Millennial", definition: "People born roughly between the early 1980s and late 1990s" },
+        { term: "Invention", definition: "Something created or made for the first time" },
+        { term: "Tradition", definition: "A custom or belief passed down through generations" }
+      ],
+      [
+        { term: "Decades", definition: "Periods of ten years" },
+        { term: "Dorky", definition: "Socially awkward or not fashionable (informal)" },
+        { term: "Ironic", definition: "Something that happens in the opposite way to what you’d expect, often humorously" },
+        { term: "Jingle bell sweaters", definition: "Sweaters with Christmas designs, specifically associated with the sound of jingle bells" },
+        { term: "The butt of a joke", definition: "The target or subject of a joke" },
+        { term: "Lame", definition: "Not cool, boring, or uninteresting (informal)" },
+        { term: "Vintage", definition: "Old but of good quality, often referring to clothing" }
+      ],
+      [
+        { term: "Thrift shops", definition: "Stores that sell second-hand items" },
+        { term: "Entrepreneurs", definition: "People who start and run their own businesses" },
+        { term: "Shark Tank", definition: "A popular TV show where entrepreneurs pitch their business ideas to investors" },
+        { term: "Tipsy Elves", definition: "A company that sells fun holiday sweaters" },
+        { term: "Bar crawls", definition: "An event where people go to multiple bars in one evening" },
+        { term: "NFL", definition: "National Football League, American football" },
+        { term: "Marathon", definition: "A long-distance race, or an event that lasts a long time" },
+        { term: "Inevitably", definition: "Something that is certain to happen" },
+        { term: "Celebrities", definition: "Famous people, often from the entertainment industry" }
+      ]
+    ];
+
+    let currentPage = 0;
+
+    function shuffle(array) {
+      return array.sort(() => Math.random() - 0.5);
+    }
+
+    function populatePage(pageIndex) {
+      const termsContainer = document.getElementById("terms-container");
+      const definitionsContainer = document.getElementById("definitions-container");
+      const pageNumber = document.getElementById("page-number");
+      const prevButton = document.getElementById("prev-page");
+      const nextButton = document.getElementById("next-page");
+
+      termsContainer.innerHTML = "";
+      definitionsContainer.innerHTML = "";
+      pageNumber.textContent = pageIndex + 1;
+
+      // Shuffle terms and definitions together as pairs
+      const data = termsAndDefinitions[pageIndex];
+      const shuffledPairs = shuffle(data);
+      
+      // Separate shuffled terms and definitions for display
+      const shuffledTerms = shuffle([...shuffledPairs]);
+      const shuffledDefinitions = shuffle([...shuffledPairs]);
+
+      shuffledTerms.forEach((item, index) => {
+        const termDiv = document.createElement("div");
+        termDiv.classList.add("term");
+        termDiv.setAttribute("draggable", "true");
+        termDiv.setAttribute("data-id", item.term);
+        termDiv.textContent = item.term;
+        termsContainer.appendChild(termDiv);
+      });
+
+      shuffledDefinitions.forEach((item, index) => {
+        const definitionDiv = document.createElement("div");
+        definitionDiv.classList.add("definition");
+        definitionDiv.setAttribute("data-id", item.term);
+        definitionDiv.textContent = item.definition;
+        definitionsContainer.appendChild(definitionDiv);
+      });
+
+      prevButton.disabled = pageIndex === 0;
+      nextButton.disabled = pageIndex === termsAndDefinitions.length - 1;
+
+      enableDragAndDrop();
+    }
+
+    function enableDragAndDrop() {
+      const terms = document.querySelectorAll(".term");
+      const definitions = document.querySelectorAll(".definition");
+      const feedback = document.getElementById("feedback");
+
+      terms.forEach((term) => {
+        term.addEventListener("dragstart", (e) => {
+          e.dataTransfer.setData("text", e.target.getAttribute("data-id"));
+        });
+      });
+
+      definitions.forEach((definition) => {
+        definition.addEventListener("dragover", (e) => {
+          e.preventDefault();
+        });
+
+        definition.addEventListener("drop", (e) => {
+          e.preventDefault();
+          const termId = e.dataTransfer.getData("text");
+          const definitionId = e.target.getAttribute("data-id");
+
+          if (termId === definitionId) {
+            e.target.classList.add("correct");
+            const draggedTerm = document.querySelector(`.term[data-id="${termId}"]`);
+            draggedTerm.classList.add("correct");
+            e.target.textContent = draggedTerm.textContent;
+            draggedTerm.setAttribute("draggable", "false");
+            e.target.setAttribute("droppable", "false");
+          } else {
+            e.target.classList.add("incorrect");
+            setTimeout(() => e.target.classList.remove("incorrect"), 1000);
+          }
+
+          if (document.querySelectorAll(".term[draggable='true']").length === 0) {
+            feedback.textContent = "Great job! You matched all the terms!";
+          }
+        });
+      });
+    }
+
+    document.getElementById("prev-page").addEventListener("click", () => {
+      currentPage--;
+      populatePage(currentPage);
+    });
+
+    document.getElementById("next-page").addEventListener("click", () => {
+      currentPage++;
+      populatePage(currentPage);
+    });
+
+    populatePage(currentPage);
+  </script>
+</body>
+</html>
